@@ -12,7 +12,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
     />
-    <link rel="preload" as="image" href="images/hero-bg.png" />
+    <link rel="preload" as="image" href="images/hero-bg.jpg" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -35,7 +35,8 @@
 
       <main class="hero">
         <section class="meter" id="meter" aria-labelledby="meter-title">
-          <h1 id="meter-title" class="visually-hidden">HELP Juristförsäkring – utan timkostnad</h1>
+          <!-- Synlig men diskret: berättar vad HELP säljer -->
+          <h1 id="meter-title" class="eyebrow">Juristförsäkring</h1>
 
           <!--
             Tre lägen på samma yta (ingen höjdändring):
@@ -56,11 +57,20 @@
               <span class="swap__item meter__label meter__label--run" id="run-label" aria-hidden="true">Juristens klocka tickar …</span>
               <span class="swap__item meter__label meter__label--done" aria-hidden="true">Med HELP</span>
             </span>
+
+            <!-- Visas när man landat på 0 kr: prova en annan situation -->
+            <button class="restart" type="button" id="restart" tabindex="-1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              <span>Prova en annan</span>
+            </button>
           </div>
 
           <!-- Rad 2: siffran -->
           <p class="meter__amount" aria-live="off">
-            <span class="meter__value" id="meter-value">0</span>
+            <span class="meter__value" id="meter-value">?</span>
             <span class="meter__unit">kr</span>
           </p>
 

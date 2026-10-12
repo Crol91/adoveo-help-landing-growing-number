@@ -162,7 +162,7 @@ svg {
   height: 100dvh;
   padding: calc(var(--header-h) + 16px) max(var(--gutter), calc((100vw - 1200px) / 2 + var(--gutter))) 24px;
   background-color: #c9cfa8; /* matchar bildens ton medan den laddas */
-  background-image: url("images/hero-bg.png");
+  background-image: url("images/hero-bg.jpg");
   background-size: cover;
   background-position: 20% center; /* håll mamma och barn i bild */
   background-repeat: no-repeat;
@@ -213,7 +213,8 @@ svg {
 .meter.is-done .meter__label--run,
 .meter:is(.is-running, .is-stopped, .is-done) .choices,
 .meter:not(.is-running) .stop,
-.meter:not(.is-done) .cta {
+.meter:not(.is-done) .cta,
+.meter:not(.is-done) .restart {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -240,6 +241,52 @@ svg {
 .meter__label--choose,
 .meter__label--done {
   color: var(--petrol);
+}
+
+/* Diskret rubrik – berättar vad HELP säljer */
+.eyebrow {
+  margin-bottom: calc(var(--gap) * -0.35);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* "Prova en annan" – syns bara när man landat på 0 kr */
+.restart {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 4px 8px;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-radius: 999px;
+  transition: color 0.2s ease, background-color 0.2s ease, opacity 0.35s ease 0.4s,
+    visibility 0s;
+}
+
+.restart svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.4s var(--ease);
+}
+
+.restart:hover {
+  color: var(--petrol);
+  background: rgba(0, 55, 62, 0.06);
+}
+
+.restart:hover svg {
+  transform: rotate(-90deg);
 }
 
 /* Klockan */
@@ -578,13 +625,33 @@ svg {
     align-items: end;
     justify-items: center;
     padding: calc(var(--header-h) + 12px) var(--gutter) max(16px, env(safe-area-inset-bottom));
-    background-position: 22% 25%;
+    /* Bilden skalas mot 80 % av höjden så att ansiktena hamnar ovanför panelen */
+    background-size: auto 80%;
+    background-position: 18% top;
+    background-color: #4f6f5c; /* samma ton som toningen där bilden tar slut */
   }
 
   .hero::before {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
-      linear-gradient(180deg, rgba(0, 55, 62, 0) 50%, rgba(0, 55, 62, 0.25) 100%);
+      /* Tona ut bildens nederkant mjukt i stället för en hård kant */
+      linear-gradient(180deg, rgba(79, 111, 92, 0) 52%, rgba(79, 111, 92, 0.85) 74%, #4f6f5c 80%);
+  }
+}
+
+/* Breda mobiler/surfplattor i liggande läge: bilden täcker allt igen */
+@media (max-width: 860px) and (min-aspect-ratio: 3/4) {
+  .hero {
+    background-size: cover;
+    background-position: 22% 30%;
+  }
+}
+
+/* Stora skärmar: panelen får lite mer tyngd bredvid fotot */
+@media (min-width: 1280px) and (min-height: 760px) {
+  .meter {
+    width: 440px;
+    padding: 40px;
   }
 }
 

@@ -38,6 +38,7 @@
   const labelRun = meter.querySelector(".meter__label--run");
   const labelDone = meter.querySelector(".meter__label--done");
   const stopBtn = document.getElementById("stop");
+  const restartBtn = document.getElementById("restart");
   const cta = document.getElementById("cta");
   const announce = document.getElementById("announce");
 
@@ -84,6 +85,16 @@
   };
 
   const focusSoon = (el) => requestAnimationFrame(() => el.focus({ preventScroll: true }));
+
+  // Liten haptisk "klick"-känsla på mobiler som stödjer det
+  const buzz = (pattern) => {
+    if (!prefersReducedMotion && navigator.vibrate) navigator.vibrate(pattern);
+  };
+
+  // Vilande läge innan ett val: "? kr" – vad kommer det kosta?
+  const renderIdle = () => {
+    valueEl.textContent = "?";
+  };
 
   /* ------------------------------------------------------------------------
      Steg 2: klockan tickar
@@ -160,6 +171,8 @@
     labelRun.setAttribute("aria-hidden", "true");
     labelDone.removeAttribute("aria-hidden");
     setReachable(cta, true);
+    setReachable(restartBtn, true);
+    buzz([18, 60, 18]);
 
     const price =
       typeof MONTHLY_PRICE === "number"
@@ -180,6 +193,7 @@
     meter.classList.add("is-stopped");
     setReachable(stopBtn, false);
     setNote("&nbsp;");
+    buzz(25);
 
     const from = state.amount;
     if (prefersReducedMotion || from < 1) {
@@ -203,10 +217,34 @@
   stopBtn.addEventListener("click", (event) => stop(event.detail === 0));
 
   /* ------------------------------------------------------------------------
+     Prova en annan situation
+     --------------------------------------------------------------------- */
+
+  const restart = (fromKeyboard) => {
+    meter.classList.remove("is-done", "is-stopped", "is-running", "is-capped");
+    labelDone.setAttribute("aria-hidden", "true");
+    labelRun.setAttribute("aria-hidden", "true");
+    labelChoose.removeAttribute("aria-hidden");
+
+    setReachable(cta, false);
+    setReachable(restartBtn, false);
+    choices.forEach((choice) => setReachable(choice, true));
+
+    state.amount = 0;
+    renderIdle();
+    setNote("&nbsp;");
+    announce.textContent = "";
+
+    if (fromKeyboard) focusSoon(choices[0]);
+  };
+
+  restartBtn.addEventListener("click", (event) => restart(event.detail === 0));
+
+  /* ------------------------------------------------------------------------
      Start: tona in panelen när bilden laddats
      --------------------------------------------------------------------- */
 
-  render(0);
+  renderIdle();
 
   let started = false;
   const begin = () => {
@@ -218,6 +256,6 @@
   const bg = new Image();
   bg.addEventListener("load", begin);
   bg.addEventListener("error", begin);
-  bg.src = "images/hero-bg.png";
+  bg.src = "images/hero-bg.jpg";
   setTimeout(begin, 700);
 })();
