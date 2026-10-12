@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Säkra huset – tryck på ljuspunkterna och se hur HELP Juristförsäkring skyddar ditt hem och din familj utan timkostnad." />
+    <meta name="description" content="Juristens klocka tickar – med HELP Juristförsäkring betalar du ingen timkostnad." />
     <meta name="theme-color" content="#FFFFFF" />
     <title>HELP Juristförsäkring</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,7 +23,7 @@
             <img src="images/_help-logo_2024_rgb_original.svg" class="logo-img" alt="HELP Logo" />
           </a>
 
-          <a class="login" href="https://help.se/">
+          <a class="login" href="https://minsida.helpforsakring.se/logga-in-privat">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
@@ -34,128 +34,48 @@
       </header>
 
       <main class="hero">
-        <section class="hero-card" aria-labelledby="hero-title">
-          <h1 id="hero-title" class="hero-card__title">Säkra huset</h1>
+        <section class="meter" id="meter" aria-labelledby="meter-title">
+          <h1 id="meter-title" class="visually-hidden">HELP Juristförsäkring – utan timkostnad</h1>
 
-          <!-- Husscen med hotspots -->
-          <div class="scene" id="scene">
-            <!--
-              viewBox 320 × 190 – huset är ritat så att:
-              taknocken ligger vid (40.6 %, 20 %), vardagsrummet vid (30 %, 65 %)
-              och garaget/entrén vid (70 %, 65 %), precis där hotspotsen sitter.
-            -->
-            <svg class="scene__svg" viewBox="0 0 320 190" aria-hidden="true">
-              <defs>
-                <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#DCEBE2" />
-                  <stop offset="1" stop-color="#F4F8F1" />
-                </linearGradient>
-                <radialGradient id="window-glow" cx="0.5" cy="0.5" r="0.6">
-                  <stop offset="0" stop-color="#F3FADF" />
-                  <stop offset="1" stop-color="#CFE7A0" />
-                </radialGradient>
-              </defs>
-
-              <!-- Himmel, sol och mark -->
-              <rect width="320" height="190" fill="url(#sky)" />
-              <circle class="sun" cx="276" cy="34" r="15" />
-              <path class="hill" d="M0 150c60-18 120-20 180-10s100 8 140-4v54H0Z" />
-              <rect class="ground" x="0" y="160" width="320" height="30" />
-
-              <!-- Träd -->
-              <rect class="trunk" x="29" y="122" width="6" height="40" rx="2" />
-              <circle class="crown" cx="32" cy="110" r="19" />
-              <circle class="crown crown--light" cx="25" cy="104" r="8" />
-
-              <!-- Skorsten (bakom taket) -->
-              <rect class="roof-part" x="158" y="38" width="12" height="32" />
-
-              <!-- Huvudbyggnad -->
-              <rect class="wall" x="62" y="78" width="128" height="82" />
-              <rect class="window" x="82" y="108" width="32" height="28" rx="2" />
-              <path class="window-bar" d="M98 108v28M82 122h32" />
-              <rect class="window" x="146" y="96" width="28" height="22" rx="2" />
-              <path class="window-bar" d="M160 96v22M146 107h28" />
-              <rect class="door" x="140" y="124" width="22" height="36" rx="3" />
-              <circle class="door-knob" cx="157" cy="143" r="1.6" />
-
-              <!-- Tak -->
-              <path class="roof" d="M52 82 130 24l78 58Z" />
-
-              <!-- Garage/entré -->
-              <rect class="wall" x="190" y="102" width="72" height="58" />
-              <rect class="roof-part" x="186" y="96" width="80" height="8" rx="2" />
-              <rect class="garage-door" x="202" y="112" width="48" height="48" rx="2" />
-              <path class="garage-lines" d="M202 124h48M202 136h48M202 148h48" />
-
-              <!-- Postlåda -->
-              <path class="post" d="M294 134v26" />
-              <rect class="mailbox" x="283" y="120" width="22" height="15" rx="5" />
-              <path class="mail-flag" d="M302 124v-10h7v5h-7" />
-
-              <!-- Gång -->
-              <path class="walkway" d="M140 160h22l10 30h-42Z" />
-            </svg>
-
-            <!-- Hotspots (positioner i % av scenen) -->
-            <button
-              class="hotspot"
-              type="button"
-              data-key="bostad"
-              style="--x: 40.6%; --y: 20%"
-              aria-pressed="false"
-              aria-label="Bostad"
-            >
-              <span class="hotspot__dot" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7" /></svg>
-              </span>
-              <span class="hotspot__label">Bostad</span>
-            </button>
-
-            <button
-              class="hotspot"
-              type="button"
-              data-key="familj"
-              style="--x: 30%; --y: 65%"
-              aria-pressed="false"
-              aria-label="Familj"
-            >
-              <span class="hotspot__dot" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7" /></svg>
-              </span>
-              <span class="hotspot__label">Familj</span>
-            </button>
-
-            <button
-              class="hotspot"
-              type="button"
-              data-key="avtal"
-              style="--x: 70%; --y: 65%"
-              aria-pressed="false"
-              aria-label="Avtal och köp"
-            >
-              <span class="hotspot__dot" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7" /></svg>
-              </span>
-              <span class="hotspot__label">Avtal &amp; Köp</span>
-            </button>
+          <!-- Rad 1: klockikon + kort status (byts vid stopp) -->
+          <div class="meter__status">
+            <span class="clock" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle class="clock__face" cx="12" cy="12" r="9" />
+                <path class="clock__hand" d="M12 12V6.5" />
+                <path class="clock__check" d="m7.5 12.5 3 3 6-6.5" />
+              </svg>
+            </span>
+            <span class="swap">
+              <span class="swap__item meter__label">Juristens klocka tickar …</span>
+              <span class="swap__item meter__label meter__label--done" aria-hidden="true">Med HELP – utan timkostnad.</span>
+            </span>
           </div>
 
-          <!-- Bekräftelse + CTA – kortet fälls ut nedåt vid första klicket -->
-          <div class="outcome" id="outcome" aria-hidden="true">
-            <div class="outcome__inner" id="outcome-inner">
-              <p class="confirm" aria-live="polite">
-                <strong>100% Trygghet aktiverad</strong> för ditt hem och din familj.
-              </p>
+          <!-- Rad 2: siffran -->
+          <p class="meter__amount" aria-live="off">
+            <span class="meter__value" id="meter-value">0</span>
+            <span class="meter__unit">kr</span>
+          </p>
 
-              <a class="cta" href="https://help.se/" id="cta" tabindex="-1">
-                <span class="cta__label">Trygga din familjs framtid</span>
-                <svg class="cta__arrow" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </a>
-            </div>
+          <!-- Rad 3: diskret fotnot -->
+          <p class="meter__note" id="meter-note">ca 2 500 kr/h · snabbspolat</p>
+
+          <!-- Rad 4: knapp → CTA (samma plats, inget hopp) -->
+          <div class="swap meter__actions">
+            <button class="swap__item stop" type="button" id="stop">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
+              <span>Stoppa klockan</span>
+            </button>
+
+            <a class="swap__item cta" href="https://help.se/" id="cta" tabindex="-1" aria-hidden="true">
+              <span>Skaffa HELP</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </a>
           </div>
+
+          <!-- För skärmläsare: meddela resultatet -->
+          <p class="visually-hidden" id="announce" aria-live="polite"></p>
         </section>
       </main>
     </div>

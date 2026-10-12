@@ -1,8 +1,21 @@
 (() => {
   "use strict";
 
+  /* ------------------------------------------------------------------------
+     Konfiguration
+     --------------------------------------------------------------------- */
+
+  const HOURLY_RATE = 2500; // kr/h – ungefärligt arvode hos en jurist
+  const SPEED = 120; // snabbspolning: 1 sekund på sidan = 2 minuter juristtid
+  const CAP = 10000; // klockan stannar här och väntar på besökaren
+  const START_DELAY = 900; // ms efter att panelen tonats in
+  const RAMP_UP = 1200; // ms – klockan accelererar mjukt i början
+
+  const KR_PER_MS = (HOURLY_RATE / 3600 / 1000) * SPEED;
+
   const root = document.documentElement;
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const format = new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 });
 
   root.classList.add("js");
 
@@ -10,160 +23,120 @@
      Element
      --------------------------------------------------------------------- */
 
-  const hero = document.querySelector(".hero");
-  const card = document.querySelector(".hero-card");
-  const scene = document.getElementById("scene");
-  const hotspots = Array.from(document.querySelectorAll(".hotspot"));
-  const outcome = document.getElementById("outcome");
-  const outcomeInner = document.getElementById("outcome-inner");
+  const meter = document.getElementById("meter");
+  const valueEl = document.getElementById("meter-value");
+  const stopBtn = document.getElementById("stop");
   const cta = document.getElementById("cta");
+  const announce = document.getElementById("announce");
 
-  const px = (value) => parseFloat(value) || 0;
+  let amount = 0;
+  let running = false;
+  let frame = 0;
+  let lastTime = 0;
+  let elapsed = 0;
+
+  const render = (value) => {
+    valueEl.textContent = format.format(Math.round(value));
+  };
 
   /* ------------------------------------------------------------------------
-     Bekräftelse + CTA
+     Klockan tickar
      --------------------------------------------------------------------- */
 
-  const showOutcome = () => {
-    if (outcome.classList.contains("is-visible")) return;
+  const step = (now) => {
+    if (!running) return;
 
-    outcome.classList.add("is-visible");
-    outcome.setAttribute("aria-hidden", "false");
+    // Max 100 ms per bildruta – om fliken varit dold fortsätter klockan där den var
+    const dt = Math.min(now - lastTime, 100);
+    lastTime = now;
+    elapsed += dt;
+
+    const ramp = Math.min(1, elapsed / RAMP_UP);
+    amount = Math.min(CAP, amount + dt * KR_PER_MS * ramp);
+    render(amount);
+
+    if (amount >= CAP) {
+      running = false;
+      meter.classList.add("is-capped");
+      return;
+    }
+    frame = requestAnimationFrame(step);
+  };
+
+  const start = () => {
+    if (running || meter.classList.contains("is-stopped")) return;
+    running = true;
+    lastTime = performance.now();
+    frame = requestAnimationFrame(step);
+  };
+
+  /* ------------------------------------------------------------------------
+     Stoppa → räkna ned till 0 kr → visa CTA
+     --------------------------------------------------------------------- */
+
+  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+  const finish = (fromKeyboard) => {
+    amount = 0;
+    render(0);
+    meter.classList.add("is-done");
+
     cta.removeAttribute("tabindex");
-    if (prefersReducedMotion) outcome.classList.add("is-open");
+    cta.removeAttribute("aria-hidden");
+    announce.textContent = "0 kronor. Med HELP – utan timkostnad.";
+
+    if (fromKeyboard) cta.focus({ preventScroll: true });
   };
 
-  // När utfällningen är klar: låt knappens skugga/puls synas utanför ytan
-  outcome.addEventListener("transitionend", (event) => {
-    if (event.target !== outcome || event.propertyName !== "grid-template-rows") return;
-    outcome.classList.toggle("is-open", outcome.classList.contains("is-visible"));
-  });
+  const stop = (fromKeyboard) => {
+    if (meter.classList.contains("is-stopped")) return;
 
-  /* ------------------------------------------------------------------------
-     Hotspots
-     --------------------------------------------------------------------- */
+    running = false;
+    cancelAnimationFrame(frame);
+    meter.classList.add("is-stopped");
 
-  const flash = (hotspot) => {
-    if (prefersReducedMotion) return;
-    const el = document.createElement("span");
-    el.className = "flash";
-    hotspot.appendChild(el);
-    el.addEventListener("animationend", () => el.remove(), { once: true });
-  };
+    // Fokus får inte ligga kvar på en knapp som försvinner
+    if (fromKeyboard) stopBtn.blur();
 
-  const activate = (hotspot) => {
-    if (hotspot.classList.contains("is-active")) return;
-
-    hotspot.classList.add("is-active");
-    hotspot.setAttribute("aria-pressed", "true");
-
-    // Tänd motsvarande del av huset (fönster, tak, garage/postlåda)
-    scene.classList.add(`is-${hotspot.dataset.key}`);
-    if (hotspots.every((h) => h.classList.contains("is-active"))) {
-      scene.classList.add("is-complete");
+    const from = amount;
+    if (prefersReducedMotion || from < 1) {
+      finish(fromKeyboard);
+      return;
     }
 
-    flash(hotspot);
-    showOutcome();
-  };
+    // Snabb nedräkning – längre ju högre summan hunnit bli
+    const duration = Math.min(1400, Math.max(700, from / 6));
+    const t0 = performance.now();
 
-  hotspots.forEach((hotspot) => hotspot.addEventListener("click", () => activate(hotspot)));
-
-  /* ------------------------------------------------------------------------
-     Förankring – kortets överkant ligger still så att det växer nedåt
-     --------------------------------------------------------------------- */
-
-  const anchorCard = ({ animate = false } = {}) => {
-    const heroStyle = getComputedStyle(hero);
-    const cardStyle = getComputedStyle(card);
-    const outcomeStyle = getComputedStyle(outcome);
-
-    const available = hero.clientHeight - px(heroStyle.paddingTop) - px(heroStyle.paddingBottom);
-    const gap = px(cardStyle.rowGap);
-
-    // Kortets höjd utan utfällt innehåll, och med bekräftelse + CTA utfällda
-    const outcomeShare = outcome.offsetHeight + gap + px(outcomeStyle.marginTop);
-    const base = card.offsetHeight - outcomeShare;
-    const expanded = base + gap + outcomeInner.scrollHeight;
-
-    // Centrera det ihopfällda kortet, men aldrig så lågt att det utfällda inte ryms
-    const top = Math.max(0, Math.min((available - base) / 2, available - expanded));
-
-    if (!animate) card.style.transition = "none";
-    hero.style.setProperty("--card-top", `${Math.round(top)}px`);
-    hero.classList.add("is-anchored");
-    if (!animate) {
-      void card.offsetWidth;
-      card.style.transition = "";
-    }
-  };
-
-  anchorCard();
-
-  let resizeTimer = 0;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => anchorCard({ animate: true }), 150);
-  });
-
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => anchorCard({ animate: true }));
-  }
-
-  /* ------------------------------------------------------------------------
-     Intro-animation
-     --------------------------------------------------------------------- */
-
-  const revealTargets = [".hero-card", ".hero-card__title", ".scene"]
-    .map((selector) => document.querySelector(selector))
-    .filter(Boolean);
-
-  revealTargets.forEach((el, i) => {
-    el.classList.add("reveal");
-    el.style.setProperty("--delay", `${i * 110}ms`);
-
-    const cleanup = (event) => {
-      if (event.target !== el || event.propertyName !== "opacity") return;
-      el.classList.remove("reveal", "is-visible");
-      el.style.removeProperty("--delay");
-      el.removeEventListener("transitionend", cleanup);
+    const countdown = (now) => {
+      const t = Math.min(1, (now - t0) / duration);
+      render(from * (1 - easeOutCubic(t)));
+      if (t < 1) requestAnimationFrame(countdown);
+      else finish(fromKeyboard);
     };
-    el.addEventListener("transitionend", cleanup);
-  });
+    requestAnimationFrame(countdown);
+  };
 
-  // Starta när bakgrundsbilden laddats (max 600 ms väntan)
+  // detail === 0 betyder att klicket kom från tangentbordet
+  stopBtn.addEventListener("click", (event) => stop(event.detail === 0));
+
+  /* ------------------------------------------------------------------------
+     Start: tona in panelen när bilden laddats, starta sedan klockan
+     --------------------------------------------------------------------- */
+
+  render(0);
+
   let started = false;
-  const startOnce = () => {
+  const begin = () => {
     if (started) return;
     started = true;
-    requestAnimationFrame(() => {
-      revealTargets.forEach((el) => el.classList.add("is-visible"));
-    });
+    requestAnimationFrame(() => meter.classList.add("is-in"));
+    setTimeout(start, prefersReducedMotion ? 0 : START_DELAY);
   };
 
   const bg = new Image();
-  bg.addEventListener("load", startOnce);
-  bg.addEventListener("error", startOnce);
+  bg.addEventListener("load", begin);
+  bg.addEventListener("error", begin);
   bg.src = "images/hero-bg.png";
-  setTimeout(startOnce, 600);
-
-  /* ------------------------------------------------------------------------
-     CTA – ripple vid klick
-     --------------------------------------------------------------------- */
-
-  cta.addEventListener("pointerdown", (event) => {
-    if (prefersReducedMotion) return;
-
-    const rect = cta.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height) * 2;
-    const ripple = document.createElement("span");
-
-    ripple.className = "ripple";
-    ripple.style.width = ripple.style.height = `${size}px`;
-    ripple.style.left = `${event.clientX - rect.left - size / 2}px`;
-    ripple.style.top = `${event.clientY - rect.top - size / 2}px`;
-
-    cta.appendChild(ripple);
-    ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
-  });
+  setTimeout(begin, 700);
 })();

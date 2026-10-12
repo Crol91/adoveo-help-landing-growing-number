@@ -1,31 +1,26 @@
 /* ==========================================================================
-   HELP Juristförsäkring – single viewport landing page (Säkra huset)
+   HELP Juristförsäkring – "Juristens klocka"
+   En tickande taxameter som besökaren stoppar. Siffran bär budskapet.
    ========================================================================== */
 
 :root {
-  --ink: #0a192f; /* text & rubriker */
-  --text: #3b4a5c;
-  --muted: #6b7a8c;
-  --green: #054738; /* hus, aktiva hotspots & CTA */
-  --green-hover: #03362a;
-  --lime: #a2ce57; /* loggans limegröna – glöd & detaljer */
-  --lime-soft: rgba(162, 206, 87, 0.18);
+  /* Loggans färger */
+  --petrol: #00373e;
+  --lime: #a2ce57;
+  --lime-hover: #b4da72;
+  --lime-soft: rgba(162, 206, 87, 0.35);
+
+  --text: #4a5f62;
+  --muted: #7f9194;
   --white: #ffffff;
-  --line: #e3e8ed;
-  --surface: #f6f8f9;
 
   --font: "Inter", system-ui, -apple-system, sans-serif;
 
   --header-h: clamp(56px, 9dvh, 76px);
-  --edge: clamp(10px, 2.4dvh, 28px); /* minsta luft runt kortet */
   --gutter: clamp(16px, 4vw, 48px);
-  --radius: 24px;
+  --gap: clamp(14px, 2.4dvh, 20px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --spring: cubic-bezier(0.34, 1.5, 0.64, 1);
-
-  /* Vertikal rytm och storlekar skalar med skärmhöjden */
-  --space: clamp(12px, 2.6dvh, 26px);
-  --scene-h: clamp(150px, 34dvh, 280px);
 }
 
 *,
@@ -45,11 +40,10 @@ body {
 
 body {
   font-family: var(--font);
-  color: var(--ink);
+  color: var(--petrol);
   background: var(--white);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -71,8 +65,17 @@ svg {
 }
 
 :focus-visible {
-  outline: 3px solid var(--green);
+  outline: 3px solid var(--petrol);
   outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
@@ -86,7 +89,7 @@ svg {
 }
 
 /* --------------------------------------------------------------------------
-   Header – transparent ovanpå bakgrundsbilden
+   Header – transparent ovanpå bilden
    -------------------------------------------------------------------------- */
 
 .header {
@@ -111,7 +114,6 @@ svg {
 
 .logo {
   display: inline-flex;
-  align-items: center;
 }
 
 .logo-img {
@@ -128,14 +130,11 @@ svg {
   padding: 9px 16px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--ink);
   background: rgba(255, 255, 255, 0.85);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
   border-radius: 999px;
-  box-shadow: 0 4px 14px -6px rgba(10, 25, 47, 0.3);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .login svg {
@@ -149,579 +148,394 @@ svg {
 
 .login:hover {
   background: var(--white);
-  border-color: var(--ink);
 }
 
 /* --------------------------------------------------------------------------
-   Hero – bakgrundsbilden täcker hela skärmen, även bakom headern
+   Hero – fotot får ta plats, panelen ligger över lövverket till höger
    -------------------------------------------------------------------------- */
 
 .hero {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   align-items: center;
-  /* Kortets överkant förankras (via --card-top från index.js) så att det
-     växer nedåt när det expanderar. Utan JS centreras kortet. */
-  justify-content: center;
+  justify-items: end;
   height: 100dvh;
-  padding: calc(var(--header-h) + var(--edge)) var(--gutter) var(--edge);
-  overflow: hidden;
+  padding: calc(var(--header-h) + 16px) max(var(--gutter), calc((100vw - 1200px) / 2 + var(--gutter))) 24px;
   background-color: #c9cfa8; /* matchar bildens ton medan den laddas */
   background-image: url("images/hero-bg.png");
   background-size: cover;
-  background-position: center;
+  background-position: 20% center; /* håll mamma och barn i bild */
   background-repeat: no-repeat;
   isolation: isolate;
 }
 
-/* Ljus toning upptill så att den mörka logotypen syns tydligt,
-   och mörkare nedtill så att kortet lyfter från bilden */
+/* Ljus toning upptill för loggan, svag toning åt höger bakom panelen */
 .hero::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
-    linear-gradient(180deg, rgba(10, 25, 47, 0.04), rgba(10, 25, 47, 0.24));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
+    linear-gradient(90deg, rgba(0, 55, 62, 0) 45%, rgba(0, 55, 62, 0.18) 100%);
   pointer-events: none;
 }
 
-.js .hero.is-anchored {
-  justify-content: flex-start;
-}
-
-.js .hero.is-anchored .hero-card {
-  margin-top: var(--card-top, 0px);
-}
-
 /* --------------------------------------------------------------------------
-   Hero-kort
+   Panelen
    -------------------------------------------------------------------------- */
 
-.hero-card {
+.meter {
   display: flex;
   flex-direction: column;
-  gap: var(--space);
-  flex-shrink: 0;
-  width: min(100%, 480px);
-  /* Höjden följer innehållet – inga fasta mått */
-  height: auto;
-  padding: clamp(20px, 3.4dvh, 32px) clamp(16px, 4vw, 30px);
+  gap: var(--gap);
+  width: min(100%, 400px);
+  padding: clamp(24px, 4dvh, 36px);
   background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: 0 2px 6px rgba(10, 25, 47, 0.06), 0 30px 60px -24px rgba(10, 25, 47, 0.4);
-  transition: margin-top 0.5s var(--ease);
+  border-radius: 24px;
+  box-shadow: 0 30px 60px -28px rgba(0, 55, 62, 0.45);
 }
 
-.hero-card__title {
-  font-size: clamp(1.375rem, min(5.6vw, 4.2dvh), 2rem);
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  text-align: center;
-  color: var(--ink);
-  text-wrap: balance;
+/* Två saker på samma plats – den ena tonas ut, den andra in (inget hopp) */
+.swap {
+  display: grid;
 }
 
-/* --------------------------------------------------------------------------
-   Husscen
-   -------------------------------------------------------------------------- */
+.swap > .swap__item {
+  grid-area: 1 / 1;
+}
 
-.scene {
+/* Statusrad */
+.meter__status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meter__label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: opacity 0.35s ease, transform 0.45s var(--ease);
+}
+
+.meter__label--done {
+  color: var(--petrol);
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* Klockan */
+.clock {
   position: relative;
-  width: min(100%, calc(var(--scene-h) * 320 / 190));
-  aspect-ratio: 320 / 190;
-  margin: 0 auto;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(5, 71, 56, 0.08);
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
 }
 
-.scene__svg {
+.clock svg {
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
-/* Illustrationens delar */
-.sun {
-  fill: rgba(162, 206, 87, 0.35);
-  transition: fill 0.6s ease;
-}
-
-.hill {
-  fill: #d3e5cb;
-}
-
-.ground {
-  fill: #c5dcb9;
-}
-
-.trunk {
-  fill: #2e5a4a;
-}
-
-.crown {
-  fill: #9fc77f;
-}
-
-.crown--light {
-  fill: rgba(255, 255, 255, 0.35);
-}
-
-.wall {
-  fill: #ffffff;
-  stroke: var(--green);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-}
-
-.roof,
-.roof-part {
-  fill: var(--green);
-  transition: fill 0.6s ease, filter 0.6s ease;
-}
-
-.window {
-  fill: #e4ece8;
-  stroke: var(--green);
+.clock__face {
+  fill: none;
+  stroke: var(--petrol);
   stroke-width: 2;
-  transition: fill 0.6s ease, filter 0.6s ease;
+  transition: fill 0.4s ease, stroke 0.4s ease;
 }
 
-.window-bar {
-  stroke: var(--green);
-  stroke-width: 1.5;
-}
-
-.door {
-  fill: #f1f5f2;
-  stroke: var(--green);
+.clock__hand {
+  fill: none;
+  stroke: var(--petrol);
   stroke-width: 2;
-}
-
-.door-knob {
-  fill: var(--green);
-}
-
-.garage-door {
-  fill: #eef3f0;
-  stroke: var(--green);
-  stroke-width: 2;
-  transition: fill 0.6s ease;
-}
-
-.garage-lines {
-  stroke: rgba(5, 71, 56, 0.35);
-  stroke-width: 1.5;
-}
-
-.post {
-  stroke: var(--green);
-  stroke-width: 3;
   stroke-linecap: round;
+  transform-origin: 12px 12px;
+  animation: tick 1s steps(12) infinite;
+  transition: opacity 0.2s ease;
 }
 
-.mailbox {
-  fill: var(--green);
-  transition: fill 0.6s ease;
+@keyframes tick {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.mail-flag {
+.clock__check {
+  fill: none;
+  stroke: var(--petrol);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+}
+
+/* Diskret pulsring medan klockan tickar */
+.clock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 55, 62, 0.35);
+  animation: ring 1.6s ease-out infinite;
+}
+
+@keyframes ring {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+/* Siffran – sidans hjälte */
+.meter__amount {
+  display: flex;
+  align-items: baseline;
+  gap: 0.18em;
+  font-size: clamp(3.5rem, min(16vw, 11dvh), 5.75rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--petrol);
+}
+
+.meter__unit {
+  font-size: 0.38em;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+/* Lime understrykning som ritas in när klockan landat på 0 kr */
+.meter__value {
+  position: relative;
+}
+
+.meter__value::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.1em;
+  height: 0.09em;
+  border-radius: 999px;
+  background: var(--lime);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s var(--ease) 0.15s;
+}
+
+.meter__note {
+  margin-top: calc(var(--gap) * -0.6);
+  font-size: 0.8125rem;
+  color: var(--muted);
+  transition: opacity 0.3s ease;
+}
+
+/* Knapp → CTA */
+.meter__actions {
+  margin-top: 4px;
+}
+
+.stop,
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: clamp(14px, 2.2dvh, 18px) 24px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.stop {
+  color: var(--white);
+  background: var(--petrol);
+  transition: transform 0.25s var(--spring), background-color 0.2s ease, opacity 0.25s ease,
+    visibility 0s;
+}
+
+.stop svg {
+  width: 16px;
+  height: 16px;
   fill: var(--lime);
-  transform-box: fill-box;
-  transform-origin: 0% 100%;
-  transform: rotate(90deg);
-  transition: transform 0.5s var(--spring);
 }
 
-.walkway {
-  fill: #e9efe3;
+.stop:hover {
+  background: #004a53;
+  transform: scale(1.02);
 }
 
-/* Delar som "tänds" när respektive hotspot aktiveras */
-.scene.is-familj .window {
-  fill: url(#window-glow);
-  filter: drop-shadow(0 0 4px rgba(162, 206, 87, 0.9));
+.stop:active {
+  transform: scale(0.97);
 }
 
-.scene.is-bostad .roof,
-.scene.is-bostad .roof-part {
-  fill: #2f7d4a;
-  filter: drop-shadow(0 0 5px rgba(162, 206, 87, 0.8));
+/* När klockan nått taket: en lätt knuff mot knappen */
+.meter.is-capped:not(.is-stopped) .stop {
+  animation: nudge 2.4s ease-in-out infinite;
 }
 
-.scene.is-avtal .garage-door {
-  fill: #e5f2d0;
+@keyframes nudge {
+  0%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+  80% {
+    transform: scale(1.04);
+  }
+  90% {
+    transform: scale(0.99);
+  }
 }
 
-.scene.is-avtal .mailbox {
-  fill: #2f7d4a;
+.cta {
+  color: var(--petrol);
+  background: var(--lime);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.35s ease, transform 0.45s var(--ease), visibility 0s linear 0.45s,
+    background-color 0.2s ease, box-shadow 0.3s ease;
 }
 
-.scene.is-avtal .mail-flag {
-  transform: rotate(0deg);
+.cta svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.3s var(--ease);
 }
 
-.scene.is-complete .sun {
-  fill: rgba(162, 206, 87, 0.7);
+.cta:hover {
+  background: var(--lime-hover);
+  box-shadow: 0 14px 28px -14px rgba(0, 55, 62, 0.5);
+}
+
+.cta:hover svg {
+  transform: translateX(4px);
 }
 
 /* --------------------------------------------------------------------------
-   Hotspots – väl separerade, med generös klickyta och pulsring
+   Stoppat → nedräkning → klart (0 kr)
    -------------------------------------------------------------------------- */
 
-.hotspot {
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  /* Stor, separat träffyta runt en mindre synlig punkt */
-  width: 48px;
-  height: 48px;
-  margin: 0;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-}
-
-.hotspot:focus-visible {
-  outline-offset: 0;
-}
-
-.hotspot__dot {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: clamp(22px, 3.8dvh, 30px);
-  aspect-ratio: 1;
-  background: rgba(255, 255, 255, 0.96);
-  border: 2px solid #d5dde2;
-  border-radius: 50%;
-  box-shadow: 0 2px 10px rgba(10, 25, 47, 0.28);
-  transition: transform 0.35s var(--spring), background-color 0.3s ease, border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-/* Två mjuka pulsringar i tur och ordning – lugnt, inte stressigt */
-.hotspot__dot::before,
-.hotspot__dot::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 6px rgba(10, 25, 47, 0.15);
-  animation: hotspot-pulse 2.4s ease-out infinite;
-  animation-delay: var(--pulse-delay, 0s);
-  pointer-events: none;
-}
-
-.hotspot__dot::after {
-  animation-delay: calc(var(--pulse-delay, 0s) + 1.2s);
-}
-
-.hotspot:nth-of-type(2) {
-  --pulse-delay: 0.4s;
-}
-
-.hotspot:nth-of-type(3) {
-  --pulse-delay: 0.8s;
-}
-
-@keyframes hotspot-pulse {
-  0% {
-    opacity: 0.95;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    /* Ringen stannar inom träffytan så att hotspots aldrig ser ut att överlappa */
-    transform: scale(1.9);
-  }
-}
-
-.hotspot__dot svg {
-  width: 62%;
-  height: 62%;
-  fill: none;
-  stroke: var(--green);
-  stroke-width: 3.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 24;
-  stroke-dashoffset: 24;
-}
-
-.hotspot:hover .hotspot__dot {
-  transform: scale(1.15);
-  border-color: var(--lime);
-}
-
-.hotspot:active .hotspot__dot {
-  transform: scale(0.92);
-}
-
-/* Liten etikett – visas vid hover/fokus och när punkten är aktiv */
-.hotspot__label {
-  position: absolute;
-  top: calc(100% - 6px);
-  left: 50%;
-  padding: 3px 9px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  white-space: nowrap;
-  color: var(--green);
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(10, 25, 47, 0.18);
+.meter.is-stopped .clock::after {
+  animation: none;
   opacity: 0;
-  transform: translate(-50%, -4px);
-  transition: opacity 0.25s ease, transform 0.3s var(--ease);
+}
+
+.meter.is-stopped .clock__hand {
+  animation-play-state: paused;
+}
+
+.meter.is-stopped .meter__note {
+  opacity: 0;
+}
+
+.meter.is-stopped .stop {
+  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
 }
 
-.hotspot:hover .hotspot__label,
-.hotspot:focus-visible .hotspot__label,
-.hotspot.is-active .hotspot__label {
-  opacity: 1;
-  transform: translate(-50%, 0);
+.meter.is-done .clock__hand {
+  opacity: 0;
 }
 
-/* Aktiv – skarp limegrön med mörkgrön bock */
-.hotspot.is-active .hotspot__dot {
-  background: var(--lime);
-  border-color: var(--green);
-  transform: scale(1.12);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 16px 4px rgba(162, 206, 87, 0.8);
+.meter.is-done .clock__face {
+  fill: var(--lime);
+  stroke: var(--lime);
 }
 
-.hotspot.is-active .hotspot__dot::before,
-.hotspot.is-active .hotspot__dot::after {
-  border-color: rgba(162, 206, 87, 0.95);
-}
-
-.hotspot.is-active .hotspot__dot svg {
+.meter.is-done .clock__check {
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 0.4s var(--ease) 0.1s;
 }
 
-/* Ljusblixt vid klick – skapas av index.js */
-.flash {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(162, 206, 87, 0.9), rgba(162, 206, 87, 0) 70%);
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(0.5);
-  animation: flash 0.7s var(--ease) forwards;
+.meter.is-done .clock {
+  animation: pop 0.5s var(--spring);
 }
 
-@keyframes flash {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(0.5);
+@keyframes pop {
+  from {
+    transform: scale(0.7);
   }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(3.2);
-  }
-}
-
-/* --------------------------------------------------------------------------
-   Bekräftelse + CTA (Progressive Disclosure)
-   -------------------------------------------------------------------------- */
-
-/* Ihopfälld: tar ingen plats alls (0fr + negativ marginal tar ut kortets gap) */
-.outcome {
-  display: grid;
-  grid-template-rows: 0fr;
-  margin-top: calc(var(--space) * -1);
-  visibility: hidden;
-  pointer-events: none;
-  transition: grid-template-rows 0.5s var(--ease), margin-top 0.5s var(--ease),
-    visibility 0s linear 0.5s;
-}
-
-/* Utfälld: kortet växer mjukt nedåt */
-.outcome.is-visible {
-  grid-template-rows: 1fr;
-  margin-top: 0;
-  visibility: visible;
-  pointer-events: auto;
-  transition: grid-template-rows 0.5s var(--ease) 0.35s, margin-top 0.5s var(--ease) 0.35s,
-    visibility 0s;
-}
-
-.outcome__inner {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(10px, 1.8dvh, 14px);
-  min-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.outcome.is-visible .outcome__inner {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.5s ease 0.55s, transform 0.6s var(--ease) 0.55s;
-}
-
-/* När utfällningen är klar får knappens skugga/puls synas utanför ytan */
-.outcome.is-open .outcome__inner {
-  overflow: visible;
-}
-
-.confirm {
-  font-size: clamp(0.9375rem, 2.1dvh, 1.0625rem);
-  line-height: 1.4;
-  text-align: center;
-  color: var(--text);
-}
-
-.confirm strong {
-  font-weight: 800;
-  color: var(--green);
-}
-
-/* --------------------------------------------------------------------------
-   CTA
-   -------------------------------------------------------------------------- */
-
-.cta {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  padding: clamp(13px, 2.2dvh, 18px) 24px;
-  overflow: hidden;
-  font-size: clamp(1rem, 2.1dvh, 1.0625rem);
-  font-weight: 700;
-  color: var(--white);
-  background: var(--green);
-  border-radius: 999px;
-  box-shadow: 0 12px 26px -12px rgba(5, 71, 56, 0.75);
-  transition: background-color 0.25s ease, box-shadow 0.35s var(--ease),
-    transform 0.35s var(--ease);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.cta:hover {
-  background: var(--green-hover);
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 20px 34px -14px rgba(5, 71, 56, 0.85);
-}
-
-.cta:active {
-  transform: translateY(0) scale(0.97);
-}
-
-/* Glans som sveper över knappen vid hover */
-.cta::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.25) 50%, transparent 70%);
-  transform: translateX(-120%);
-  pointer-events: none;
-}
-
-.cta:hover::before {
-  transform: translateX(120%);
-  transition: transform 0.8s var(--ease);
-}
-
-/* Inbjudande puls efter framtoningen */
-.outcome.is-open .cta::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  animation: pulse 2.4s ease-out 0.3s 3;
-}
-
-.cta:hover::after {
-  animation: none !important;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(162, 206, 87, 0.75);
-  }
-  70%,
-  100% {
-    box-shadow: 0 0 0 14px rgba(162, 206, 87, 0);
-  }
-}
-
-.cta__label,
-.cta__arrow {
-  position: relative;
-  z-index: 1;
-}
-
-.cta__arrow {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: var(--lime);
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform 0.35s var(--ease);
-}
-
-.cta:hover .cta__arrow {
-  transform: translateX(5px);
-}
-
-/* Ripple – skapas av index.js */
-.ripple {
-  position: absolute;
-  z-index: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(0);
-  animation: ripple 0.6s var(--ease) forwards;
-  pointer-events: none;
-}
-
-@keyframes ripple {
   to {
     transform: scale(1);
-    opacity: 0;
   }
 }
 
-/* --------------------------------------------------------------------------
-   Intro-animation (klasser sätts av index.js)
-   -------------------------------------------------------------------------- */
-
-.js .reveal {
+.meter.is-done .meter__label:not(.meter__label--done) {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(-6px);
 }
 
-.js .reveal.is-visible {
+.meter.is-done .meter__label--done {
   opacity: 1;
   transform: none;
-  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
-  transition-delay: var(--delay, 0ms);
+}
+
+/* 0 kr – siffran landar med en lime understrykning */
+.meter.is-done .meter__value::after {
+  transform: scaleX(1);
+}
+
+.meter.is-done .cta {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.4s ease 0.1s, transform 0.5s var(--spring) 0.1s, visibility 0s,
+    background-color 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Intro
+   -------------------------------------------------------------------------- */
+
+.js .meter {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.js .meter.is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
 }
 
 /* --------------------------------------------------------------------------
    Responsivt
    -------------------------------------------------------------------------- */
+
+/* Mobil/surfplatta: fotot överst, panelen i nederkant */
+@media (max-width: 860px) {
+  .hero {
+    align-items: end;
+    justify-items: center;
+    padding: calc(var(--header-h) + 12px) var(--gutter) max(16px, env(safe-area-inset-bottom));
+    background-position: 22% 25%;
+  }
+
+  .hero::before {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
+      linear-gradient(180deg, rgba(0, 55, 62, 0) 50%, rgba(0, 55, 62, 0.25) 100%);
+  }
+}
 
 @media (max-width: 480px) {
   .login span {
@@ -734,28 +548,24 @@ svg {
 }
 
 /* Låga skärmar */
-@media (max-height: 560px) {
-  :root {
-    --space: clamp(8px, 2dvh, 14px);
-    --edge: 8px;
-    --scene-h: clamp(110px, 36dvh, 180px);
+@media (max-height: 520px) {
+  .meter {
+    gap: 10px;
+    padding: 18px 22px;
+  }
+
+  .meter__amount {
+    font-size: clamp(2.5rem, 13dvh, 3.5rem);
   }
 }
 
-/* Respektera användare som föredrar mindre rörelse */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
-    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     transition-delay: 0s !important;
-  }
-
-  .js .reveal {
-    opacity: 1;
-    transform: none;
   }
 }
