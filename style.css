@@ -196,16 +196,35 @@ svg {
   box-shadow: 0 30px 60px -28px rgba(0, 55, 62, 0.45);
 }
 
-/* Två saker på samma plats – den ena tonas ut, den andra in (inget hopp) */
+/* Flera saker på samma plats – en i taget syns (ingen höjdändring) */
 .swap {
   display: grid;
 }
 
 .swap > .swap__item {
   grid-area: 1 / 1;
+  transition: opacity 0.35s ease, transform 0.45s var(--ease), visibility 0s;
 }
 
-/* Statusrad */
+/* Dold i nuvarande läge */
+.meter:not(.is-running):not(.is-stopped) .meter__label--run,
+.meter:not(.is-done) .meter__label--done,
+.meter:is(.is-running, .is-stopped, .is-done) .meter__label--choose,
+.meter.is-done .meter__label--run,
+.meter:is(.is-running, .is-stopped, .is-done) .choices,
+.meter:not(.is-running) .stop,
+.meter:not(.is-done) .cta {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.3s var(--ease), visibility 0s linear 0.3s;
+}
+
+/* --------------------------------------------------------------------------
+   Statusrad
+   -------------------------------------------------------------------------- */
+
 .meter__status {
   display: flex;
   align-items: center;
@@ -216,13 +235,11 @@ svg {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text);
-  transition: opacity 0.35s ease, transform 0.45s var(--ease);
 }
 
+.meter__label--choose,
 .meter__label--done {
   color: var(--petrol);
-  opacity: 0;
-  transform: translateY(6px);
 }
 
 /* Klockan */
@@ -252,8 +269,12 @@ svg {
   stroke-width: 2;
   stroke-linecap: round;
   transform-origin: 12px 12px;
-  animation: tick 1s steps(12) infinite;
   transition: opacity 0.2s ease;
+}
+
+/* Visaren går bara medan klockan tickar */
+.meter.is-running .clock__hand {
+  animation: tick 1s steps(12) infinite;
 }
 
 @keyframes tick {
@@ -273,7 +294,7 @@ svg {
 }
 
 /* Diskret pulsring medan klockan tickar */
-.clock::after {
+.meter.is-running .clock::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -293,7 +314,10 @@ svg {
   }
 }
 
-/* Siffran – sidans hjälte */
+/* --------------------------------------------------------------------------
+   Siffran – sidans hjälte
+   -------------------------------------------------------------------------- */
+
 .meter__amount {
   display: flex;
   align-items: baseline;
@@ -303,6 +327,11 @@ svg {
   line-height: 0.95;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
+  color: #c3cfd0; /* vilande innan ett val görs */
+  transition: color 0.4s ease;
+}
+
+.meter:is(.is-running, .is-stopped, .is-done) .meter__amount {
   color: var(--petrol);
 }
 
@@ -333,15 +362,56 @@ svg {
 }
 
 .meter__note {
+  min-height: 1.4em;
   margin-top: calc(var(--gap) * -0.6);
   font-size: 0.8125rem;
+  line-height: 1.4;
   color: var(--muted);
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
 }
 
-/* Knapp → CTA */
+.meter__note b {
+  font-weight: 700;
+  color: var(--petrol);
+}
+
+.meter__note.is-fading {
+  opacity: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Val → stoppknapp → CTA
+   -------------------------------------------------------------------------- */
+
 .meter__actions {
   margin-top: 4px;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.choice {
+  padding: clamp(12px, 2dvh, 16px) 6px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--petrol);
+  background: var(--white);
+  border: 2px solid var(--petrol);
+  border-radius: 999px;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.25s var(--spring);
+}
+
+.choice:hover {
+  background: var(--lime);
+  border-color: var(--lime);
+  transform: translateY(-2px);
+}
+
+.choice:active {
+  transform: scale(0.96);
 }
 
 .stop,
@@ -360,8 +430,6 @@ svg {
 .stop {
   color: var(--white);
   background: var(--petrol);
-  transition: transform 0.25s var(--spring), background-color 0.2s ease, opacity 0.25s ease,
-    visibility 0s;
 }
 
 .stop svg {
@@ -372,7 +440,6 @@ svg {
 
 .stop:hover {
   background: #004a53;
-  transform: scale(1.02);
 }
 
 .stop:active {
@@ -380,7 +447,7 @@ svg {
 }
 
 /* När klockan nått taket: en lätt knuff mot knappen */
-.meter.is-capped:not(.is-stopped) .stop {
+.meter.is-capped.is-running .stop {
   animation: nudge 2.4s ease-in-out infinite;
 }
 
@@ -401,11 +468,7 @@ svg {
 .cta {
   color: var(--petrol);
   background: var(--lime);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(8px);
-  transition: opacity 0.35s ease, transform 0.45s var(--ease), visibility 0s linear 0.45s,
-    background-color 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 0 0 rgba(0, 55, 62, 0);
 }
 
 .cta svg {
@@ -428,29 +491,36 @@ svg {
   transform: translateX(4px);
 }
 
+.meter.is-done .cta {
+  transition: opacity 0.4s ease 0.1s, transform 0.5s var(--spring) 0.1s, visibility 0s,
+    background-color 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Förtroende */
+.trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: calc(var(--gap) * -0.4);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.trust svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--lime);
+}
+
+.trust b {
+  font-weight: 700;
+  color: var(--petrol);
+}
+
 /* --------------------------------------------------------------------------
-   Stoppat → nedräkning → klart (0 kr)
+   Klart – 0 kr i timkostnad
    -------------------------------------------------------------------------- */
-
-.meter.is-stopped .clock::after {
-  animation: none;
-  opacity: 0;
-}
-
-.meter.is-stopped .clock__hand {
-  animation-play-state: paused;
-}
-
-.meter.is-stopped .meter__note {
-  opacity: 0;
-}
-
-.meter.is-stopped .stop {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
-}
 
 .meter.is-done .clock__hand {
   opacity: 0;
@@ -479,27 +549,8 @@ svg {
   }
 }
 
-.meter.is-done .meter__label:not(.meter__label--done) {
-  opacity: 0;
-  transform: translateY(-6px);
-}
-
-.meter.is-done .meter__label--done {
-  opacity: 1;
-  transform: none;
-}
-
-/* 0 kr – siffran landar med en lime understrykning */
 .meter.is-done .meter__value::after {
   transform: scaleX(1);
-}
-
-.meter.is-done .cta {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-  transition: opacity 0.4s ease 0.1s, transform 0.5s var(--spring) 0.1s, visibility 0s,
-    background-color 0.2s ease, box-shadow 0.3s ease;
 }
 
 /* --------------------------------------------------------------------------

@@ -37,7 +37,12 @@
         <section class="meter" id="meter" aria-labelledby="meter-title">
           <h1 id="meter-title" class="visually-hidden">HELP Juristförsäkring – utan timkostnad</h1>
 
-          <!-- Rad 1: klockikon + kort status (byts vid stopp) -->
+          <!--
+            Tre lägen på samma yta (ingen höjdändring):
+            1. Välj situation  →  2. Klockan tickar  →  3. 0 kr i timkostnad + CTA
+          -->
+
+          <!-- Rad 1: klockikon + kort status -->
           <div class="meter__status">
             <span class="clock" aria-hidden="true">
               <svg viewBox="0 0 24 24">
@@ -47,8 +52,9 @@
               </svg>
             </span>
             <span class="swap">
-              <span class="swap__item meter__label">Juristens klocka tickar …</span>
-              <span class="swap__item meter__label meter__label--done" aria-hidden="true">Med HELP – utan timkostnad.</span>
+              <span class="swap__item meter__label meter__label--choose">Vad händer i ditt liv?</span>
+              <span class="swap__item meter__label meter__label--run" id="run-label" aria-hidden="true">Juristens klocka tickar …</span>
+              <span class="swap__item meter__label meter__label--done" aria-hidden="true">Med HELP</span>
             </span>
           </div>
 
@@ -58,12 +64,18 @@
             <span class="meter__unit">kr</span>
           </p>
 
-          <!-- Rad 3: diskret fotnot -->
-          <p class="meter__note" id="meter-note">ca 2 500 kr/h · snabbspolat</p>
+          <!-- Rad 3: diskret fotnot (fylls i av index.js) -->
+          <p class="meter__note" id="meter-note">&nbsp;</p>
 
-          <!-- Rad 4: knapp → CTA (samma plats, inget hopp) -->
+          <!-- Rad 4: val → stoppknapp → CTA (samma plats) -->
           <div class="swap meter__actions">
-            <button class="swap__item stop" type="button" id="stop">
+            <div class="swap__item choices" role="group" aria-label="Välj situation">
+              <button class="choice" type="button" data-situation="separation">Separation</button>
+              <button class="choice" type="button" data-situation="huskop">Husköp</button>
+              <button class="choice" type="button" data-situation="arv">Arv</button>
+            </div>
+
+            <button class="swap__item stop" type="button" id="stop" tabindex="-1" aria-hidden="true">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
               <span>Stoppa klockan</span>
             </button>
@@ -73,6 +85,14 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </a>
           </div>
+
+          <!-- Rad 5: förtroende -->
+          <p class="trust">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z" />
+            </svg>
+            <span><b>450 000</b> kunder litar på HELP</span>
+          </p>
 
           <!-- För skärmläsare: meddela resultatet -->
           <p class="visually-hidden" id="announce" aria-live="polite"></p>
