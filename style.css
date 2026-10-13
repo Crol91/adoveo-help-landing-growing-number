@@ -123,11 +123,12 @@ svg {
   height: clamp(22px, 4dvh, 32px);
 }
 
+/* Mobil: bara ikonen (aria-label i HTML ger skärmläsare texten) */
 .login {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 16px;
+  padding: 9px;
   font-size: 0.875rem;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.85);
@@ -135,6 +136,10 @@ svg {
   backdrop-filter: blur(8px);
   border-radius: 999px;
   transition: background-color 0.2s ease;
+}
+
+.login span {
+  display: none;
 }
 
 .login svg {
@@ -151,25 +156,26 @@ svg {
 }
 
 /* --------------------------------------------------------------------------
-   Hero – fotot får ta plats, panelen ligger över lövverket till höger
+   Hero – mobil: fotot överst, panelen i nederkant (desktop under "Responsivt")
    -------------------------------------------------------------------------- */
 
 .hero {
   position: relative;
   display: grid;
-  align-items: center;
-  justify-items: end;
+  align-items: end;
+  justify-items: center;
   height: 100dvh;
-  padding: calc(var(--header-h) + 16px) max(var(--gutter), calc((100vw - 1200px) / 2 + var(--gutter))) 24px;
-  background-color: #c9cfa8; /* matchar bildens ton medan den laddas */
+  padding: calc(var(--header-h) + 12px) var(--gutter) max(16px, env(safe-area-inset-bottom));
+  background-color: #4f6f5c; /* samma ton som toningen där bilden tar slut */
   background-image: url("images/hero-bg.jpg");
-  background-size: cover;
-  background-position: 20% center; /* håll mamma och barn i bild */
+  /* Bilden skalas mot 80 % av höjden så att ansiktena hamnar ovanför panelen */
+  background-size: auto 80%;
+  background-position: 18% top;
   background-repeat: no-repeat;
   isolation: isolate;
 }
 
-/* Ljus toning upptill för loggan, svag toning åt höger bakom panelen */
+/* Ljus toning upptill för loggan, mjuk uttoning av bildens nederkant */
 .hero::before {
   content: "";
   position: absolute;
@@ -177,7 +183,7 @@ svg {
   z-index: -1;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
-    linear-gradient(90deg, rgba(0, 55, 62, 0) 45%, rgba(0, 55, 62, 0.18) 100%);
+    linear-gradient(180deg, rgba(79, 111, 92, 0) 52%, rgba(79, 111, 92, 0.85) 74%, #4f6f5c 80%);
   pointer-events: none;
 }
 
@@ -228,6 +234,7 @@ svg {
    -------------------------------------------------------------------------- */
 
 .meter__status {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -244,17 +251,20 @@ svg {
   color: var(--petrol);
 }
 
-/* "Juristens klocka tickar …" + "Utan HELP" på raden under */
+/* "Juristens klocka tickar …" + "Utan HELP kostar det" på raden under */
 .meter__label--run {
   display: flex;
   flex-direction: column;
+  font-size: 0.8125rem;
   line-height: 1.3;
+  color: var(--muted);
 }
 
+/* Samma typsnitt och färg som "Med HELP" */
 .meter__sublabel {
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--petrol);
 }
 
 /* Diskret rubrik – berättar vad HELP säljer */
@@ -268,11 +278,15 @@ svg {
 }
 
 /* "Prova en annan" – syns bara när man landat på 0 kr */
+/* Ligger ovanpå raden så att den inte tar plats från texten medan den är dold */
 .restart {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  translate: 0 -50%;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  margin-left: auto;
   padding: 4px 8px;
   white-space: nowrap;
   font-size: 0.8125rem;
@@ -383,13 +397,21 @@ svg {
   display: flex;
   align-items: baseline;
   gap: 0.18em;
-  font-size: clamp(3.5rem, min(16vw, 11dvh), 5.75rem);
+  font-size: clamp(3.25rem, min(17vw, 11dvh), 5.75rem);
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
   color: #c3cfd0; /* vilande innan ett val görs */
-  transition: color 0.4s ease;
+  /*
+    Summan växer fysiskt medan klockan tickar. index.js sätter --progress
+    (0 = 0 kr, 1 = dyraste situationen). --grow-from är startstorleken och
+    styrs per skärmstorlek under "Responsivt".
+  */
+  --grow-from: 0.45;
+  transform: scale(calc(var(--grow-from) + (1 - var(--grow-from)) * var(--progress, 1)));
+  transform-origin: left 80%;
+  transition: color 0.4s ease, transform 0.25s var(--ease);
 }
 
 .meter:is(.is-running, .is-stopped, .is-done) .meter__amount {
@@ -633,31 +655,51 @@ svg {
    Responsivt
    -------------------------------------------------------------------------- */
 
-/* Mobil/surfplatta: fotot överst, panelen i nederkant */
-@media (max-width: 860px) {
-  .hero {
-    align-items: end;
-    justify-items: center;
-    padding: calc(var(--header-h) + 12px) var(--gutter) max(16px, env(safe-area-inset-bottom));
-    /* Bilden skalas mot 80 % av höjden så att ansiktena hamnar ovanför panelen */
-    background-size: auto 80%;
-    background-position: 18% top;
-    background-color: #4f6f5c; /* samma ton som toningen där bilden tar slut */
-  }
+/* Mobile first: grundstilarna ovan gäller mobil, större skärmar byggs på här. */
 
-  .hero::before {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
-      /* Tona ut bildens nederkant mjukt i stället för en hård kant */
-      linear-gradient(180deg, rgba(79, 111, 92, 0) 52%, rgba(79, 111, 92, 0.85) 74%, #4f6f5c 80%);
-  }
-}
-
-/* Breda mobiler/surfplattor i liggande läge: bilden täcker allt igen */
-@media (max-width: 860px) and (min-aspect-ratio: 3/4) {
+/* Breda mobiler/surfplattor i liggande läge: bilden täcker allt */
+@media (min-aspect-ratio: 3/4) {
   .hero {
     background-size: cover;
     background-position: 22% 30%;
+  }
+}
+
+/* Större mobiler: "Logga in" i klartext, lite mindre sifferväxt */
+@media (min-width: 481px) {
+  .login {
+    padding: 9px 16px;
+  }
+
+  .login span {
+    display: inline;
+  }
+
+  .meter__amount {
+    --grow-from: 0.5;
+  }
+}
+
+/* Desktop: fotot får ta plats, panelen ligger över lövverket till höger */
+@media (min-width: 861px) {
+  .hero {
+    align-items: center;
+    justify-items: end;
+    padding: calc(var(--header-h) + 16px) max(var(--gutter), calc((100vw - 1200px) / 2 + var(--gutter))) 24px;
+    background-color: #c9cfa8; /* matchar bildens ton medan den laddas */
+    background-size: cover;
+    background-position: 20% center; /* håll mamma och barn i bild */
+  }
+
+  /* Svag toning åt höger bakom panelen */
+  .hero::before {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
+      linear-gradient(90deg, rgba(0, 55, 62, 0) 45%, rgba(0, 55, 62, 0.18) 100%);
+  }
+
+  .meter__amount {
+    --grow-from: 0.55;
   }
 }
 
@@ -669,17 +711,7 @@ svg {
   }
 }
 
-@media (max-width: 480px) {
-  .login span {
-    display: none;
-  }
-
-  .login {
-    padding: 9px;
-  }
-}
-
-/* Låga skärmar */
+/* Låga skärmar (t.ex. mobil i liggande läge) */
 @media (max-height: 520px) {
   .meter {
     gap: 10px;
@@ -687,6 +719,7 @@ svg {
   }
 
   .meter__amount {
+    --grow-from: 0.6; /* lite utrymme – mindre storleksskillnad */
     font-size: clamp(2.5rem, 13dvh, 3.5rem);
   }
 }

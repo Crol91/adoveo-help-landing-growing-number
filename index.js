@@ -20,6 +20,11 @@
   const TICK_TIME = 9000; // ms tills klockan når situationens totalsumma
   const RAMP_UP = 1200; // ms – klockan accelererar mjukt i början
 
+  // Summan växer fysiskt medan den tickar och når full storlek vid den dyraste
+  // situationen (billigare situationer landar mindre). Startstorleken per
+  // skärmstorlek styrs av --grow-from i style.css.
+  const MAX_CAP = Math.max(...Object.values(SITUATIONS).map((s) => s.hours)) * HOURLY_RATE;
+
   const root = document.documentElement;
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const format = new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 });
@@ -32,6 +37,7 @@
 
   const meter = document.getElementById("meter");
   const valueEl = document.getElementById("meter-value");
+  const amountEl = valueEl.parentElement;
   const noteEl = document.getElementById("meter-note");
   const choices = Array.from(document.querySelectorAll(".choice"));
   const labelChoose = meter.querySelector(".meter__label--choose");
@@ -59,6 +65,14 @@
   const render = (value) => {
     valueEl.textContent = format.format(Math.round(value));
   };
+
+  // Storlek på summan: 0 = startstorlek, 1 = full storlek. Ingen storleksanimation vid reducerad rörelse.
+  const setGrow = (progress) => {
+    if (prefersReducedMotion) return;
+    amountEl.style.setProperty("--progress", progress.toFixed(3));
+  };
+
+  const growFor = (value) => Math.min(1, value / MAX_CAP);
 
   // Byt fotnot med en kort toning
   const setNote = (html) => {
@@ -111,6 +125,7 @@
     const ramp = Math.min(1, state.elapsed / RAMP_UP);
     state.amount = Math.min(state.cap, state.amount + dt * state.perMs * ramp);
     render(state.amount);
+    setGrow(growFor(state.amount));
 
     if (state.amount >= state.cap) {
       state.running = false;
@@ -146,6 +161,7 @@
       return;
     }
 
+    setGrow(0);
     state.running = true;
     state.lastTime = performance.now();
     state.frame = requestAnimationFrame(step);
@@ -165,6 +181,7 @@
   const finish = (fromKeyboard) => {
     state.amount = 0;
     render(0);
+    setGrow(1); // 0 kr landar i full storlek
 
     meter.classList.remove("is-stopped");
     meter.classList.add("is-done");
@@ -207,7 +224,9 @@
 
     const countdown = (now) => {
       const t = Math.min(1, (now - t0) / duration);
-      render(from * (1 - easeOutCubic(t)));
+      const value = from * (1 - easeOutCubic(t));
+      render(value);
+      setGrow(growFor(value));
       if (t < 1) requestAnimationFrame(countdown);
       else finish(fromKeyboard);
     };
@@ -232,6 +251,7 @@
 
     state.amount = 0;
     renderIdle();
+    setGrow(1);
     setNote("&nbsp;");
     announce.textContent = "";
 
