@@ -306,6 +306,7 @@
   const showView = (name) => {
     const from = meter.offsetHeight;
 
+    meter.dataset.view = name; // styr bl.a. kompaktare stilar i style.css
     Object.entries(views).forEach(([key, view]) => {
       view.hidden = key !== name;
       view.classList.toggle("is-entering", key === name && !prefersReducedMotion);
