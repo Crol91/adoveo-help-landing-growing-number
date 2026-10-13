@@ -203,6 +203,7 @@ svg {
 
 .swap > .swap__item {
   grid-area: 1 / 1;
+  align-self: center; /* lägen med olika höjd centreras mot klockan */
   transition: opacity 0.35s ease, transform 0.45s var(--ease), visibility 0s;
 }
 
@@ -241,6 +242,19 @@ svg {
 .meter__label--choose,
 .meter__label--done {
   color: var(--petrol);
+}
+
+/* "Juristens klocka tickar …" + "Utan HELP" på raden under */
+.meter__label--run {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.meter__sublabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 /* Diskret rubrik – berättar vad HELP säljer */
