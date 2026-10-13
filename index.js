@@ -8,14 +8,31 @@
   const HOURLY_RATE = 2500; // kr/h – ungefärligt arvode hos en jurist
 
   // Uppskattat antal juristtimmar per situation (illustrativt – stäm av med HELP)
+  // plan = vilken betalplan som markeras "Rekommenderas för dig"
   const SITUATIONS = {
-    separation: { hours: 10 }, // bodelning, vårdnad, avtal
-    huskop: { hours: 8 }, // t.ex. tvist om dolda fel
-    arv: { hours: 6 }, // bouppteckning, arvskifte
+    separation: { hours: 10, plan: "familj" }, // bodelning, vårdnad, avtal
+    huskop: { hours: 8, plan: "trygg" }, // t.ex. tvist om dolda fel
+    arv: { hours: 6, plan: "trygg" }, // bouppteckning, arvskifte
   };
+
+  // Betalplaner. OBS: PLATSHÅLLARE – HELP har inga publika privatplaner i dag
+  // (försäkringen säljs via samarbetspartners, ca 35–49 kr/mån). Namn, priser och
+  // innehåll måste tas fram tillsammans med HELP innan lansering.
+  const PLANS = [
+    { id: "radgivning", name: "Rådgivning", price: 49, desc: "Obegränsad juridisk rådgivning och digitala avtal." },
+    { id: "trygg", name: "Trygg", price: 79, desc: "Rådgivning plus juristhjälp om det blir tvist." },
+    { id: "familj", name: "Familj", price: 119, desc: "Allt i Trygg för hela hushållet – partner och barn." },
+  ];
+  const DEFAULT_PLAN = "trygg";
 
   // HELP:s månadspris. null = visa "fast månadsavgift" i stället för ett belopp.
   const MONTHLY_PRICE = null;
+
+  // Vart formulärets uppgifter skickas (POST, JSON). null = prototypläge: inget skickas.
+  const LEAD_ENDPOINT = null;
+
+  // Löftet i bekräftelsen – stäm av med HELP att säljorganisationen klarar det
+  const CALLBACK_TIME = "inom en arbetsdag";
 
   const TICK_TIME = 9000; // ms tills klockan når situationens totalsumma
   const RAMP_UP = 1200; // ms – klockan accelererar mjukt i början
@@ -48,7 +65,26 @@
   const cta = document.getElementById("cta");
   const announce = document.getElementById("announce");
 
+  const views = {
+    meter: document.getElementById("view-meter"),
+    plans: document.getElementById("view-plans"),
+    lead: document.getElementById("lead"),
+    sent: document.getElementById("view-sent"),
+  };
+  const form = views.lead;
+  const backBtn = document.getElementById("lead-back");
+  const leadTitle = document.getElementById("lead-title");
+  const submitBtn = form.querySelector(".lead__submit");
+  const submitText = form.querySelector(".lead__submit-text");
+  const formError = document.getElementById("lead-error");
+  const sentTitle = document.getElementById("sent-title");
+
+  const plansList = document.getElementById("plans-list");
+  const plansTitle = document.getElementById("plans-title");
+
   const state = {
+    situation: "",
+    plan: "",
     amount: 0,
     cap: 0,
     perMs: 0,
@@ -139,6 +175,7 @@
     const situation = SITUATIONS[button.dataset.situation];
     if (!situation || meter.classList.contains("is-running")) return;
 
+    state.situation = button.dataset.situation;
     state.cap = situation.hours * HOURLY_RATE;
     state.perMs = state.cap / TICK_TIME;
     state.amount = 0;
@@ -250,6 +287,7 @@
     choices.forEach((choice) => setReachable(choice, true));
 
     state.amount = 0;
+    state.plan = ""; // ny situation → ny rekommendation
     renderIdle();
     setGrow(1);
     setNote("&nbsp;");
@@ -259,6 +297,211 @@
   };
 
   restartBtn.addEventListener("click", (event) => restart(event.detail === 0));
+
+  /* ------------------------------------------------------------------------
+     Steg 4: "Skaffa HELP" → formulär → bekräftelse (i samma panel)
+     --------------------------------------------------------------------- */
+
+  // Byt vy – panelens höjd glider mjukt till den nya vyns höjd
+  const showView = (name) => {
+    const from = meter.offsetHeight;
+
+    Object.entries(views).forEach(([key, view]) => {
+      view.hidden = key !== name;
+      view.classList.toggle("is-entering", key === name && !prefersReducedMotion);
+    });
+
+    const to = meter.offsetHeight;
+    if (prefersReducedMotion || from === to) return;
+
+    meter.style.overflow = "hidden";
+    meter
+      .animate([{ height: `${from}px` }, { height: `${to}px` }], {
+        duration: 450,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      })
+      .finished.then(() => {
+        meter.style.overflow = "";
+      });
+  };
+
+  Object.values(views).forEach((view) =>
+    view.addEventListener("animationend", (event) => {
+      if (event.target === view) view.classList.remove("is-entering");
+    })
+  );
+
+  /* Betalplaner ----------------------------------------------------------- */
+
+  const planById = (id) => PLANS.find((plan) => plan.id === id);
+  const planLabel = (plan) => `${plan.name} · ${format.format(plan.price)} kr/mån`;
+
+  // Rita upp planerna med den rekommenderade först förvald
+  const renderPlans = () => {
+    const recommended = SITUATIONS[state.situation]?.plan || DEFAULT_PLAN;
+    if (!state.plan) state.plan = recommended;
+
+    plansList.querySelectorAll(".plan").forEach((el) => el.remove());
+    PLANS.forEach((plan) => {
+      const isRecommended = plan.id === recommended;
+      const label = document.createElement("label");
+      label.className = `plan${isRecommended ? " plan--recommended" : ""}`;
+      label.innerHTML = `
+        <input class="plan__radio" type="radio" name="plan" value="${plan.id}" />
+        ${isRecommended ? '<span class="plan__badge">Rekommenderas för dig</span>' : ""}
+        <span class="plan__top">
+          <span class="plan__name">${plan.name}</span>
+          <span class="plan__price"><b>${format.format(plan.price)}</b> kr/mån</span>
+        </span>
+        <span class="plan__desc">${plan.desc}</span>`;
+      const radio = label.querySelector("input");
+      radio.checked = plan.id === state.plan;
+      radio.addEventListener("change", () => {
+        state.plan = plan.id;
+        buzz(10);
+      });
+      plansList.append(label);
+    });
+  };
+
+  const openPlans = () => {
+    renderPlans();
+    showView("plans");
+    focusSoon(plansTitle);
+  };
+
+  const openForm = () => {
+    document.getElementById("lead-plan").textContent = planLabel(planById(state.plan));
+    showView("lead");
+    // Rubriken får fokus (inte namnfältet) så att mobiltangentbordet inte hoppar upp direkt
+    focusSoon(leadTitle);
+  };
+
+  cta.addEventListener("click", (event) => {
+    event.preventDefault(); // utan JS fungerar länken som vanligt
+    openPlans();
+  });
+
+  document.getElementById("plans-next").addEventListener("click", openForm);
+
+  document.getElementById("plans-back").addEventListener("click", () => {
+    showView("meter");
+    focusSoon(cta);
+  });
+
+  backBtn.addEventListener("click", () => {
+    showView("plans");
+    focusSoon(plansTitle);
+  });
+
+  /* Validering ------------------------------------------------------------ */
+
+  const fields = {
+    name: {
+      input: form.elements.name,
+      valid: (input) => input.value.trim().length >= 2,
+      message: "Skriv ditt namn.",
+    },
+    phone: {
+      input: form.elements.phone,
+      // Svenskt nummer: 07x-xxx xx xx, 08-xxx xx xx, +46 7x …
+      valid: (input) => /^(\+46|0046|0)\d{6,10}$/.test(input.value.replace(/[\s\-()]/g, "")),
+      message: "Skriv ett svenskt telefonnummer, t.ex. 070‑123 45 67.", // bryts inte mitt i numret
+    },
+    consent: {
+      input: form.elements.consent,
+      valid: (input) => input.checked,
+      message: "Kryssa i rutan så att vi får ringa dig.",
+    },
+  };
+
+  let triedSubmit = false;
+
+  const validateField = ({ input, valid, message }) => {
+    const ok = valid(input);
+    input.setAttribute("aria-invalid", ok ? "false" : "true");
+    document.getElementById(`${input.id}-error`).textContent = ok ? "" : message;
+    return ok;
+  };
+
+  // Efter första försöket rättas felen medan man skriver
+  Object.values(fields).forEach((field) => {
+    const event = field.input.type === "checkbox" ? "change" : "input";
+    field.input.addEventListener(event, () => {
+      if (triedSubmit) validateField(field);
+    });
+  });
+
+  /* Skicka ---------------------------------------------------------------- */
+
+  const sendLead = async (lead) => {
+    if (!LEAD_ENDPOINT) {
+      // Prototypläge: låtsas skicka
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      console.info("[HELP] Prototypläge – lead skickades inte (LEAD_ENDPOINT saknas):", lead);
+      return;
+    }
+    const response = await fetch(LEAD_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lead),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  };
+
+  const setLoading = (loading) => {
+    submitBtn.classList.toggle("is-loading", loading);
+    submitBtn.setAttribute("aria-disabled", loading ? "true" : "false");
+    submitText.textContent = loading ? "Skickar …" : "Ring upp mig";
+  };
+
+  const showSent = (name, phone) => {
+    const firstName = name.split(/\s+/)[0];
+    document.getElementById("sent-name").textContent = firstName ? `, ${firstName}` : "";
+    document.getElementById("sent-phone").textContent = phone;
+    document.getElementById("sent-when").textContent = CALLBACK_TIME;
+    document.getElementById("sent-plan").textContent = planById(state.plan).name;
+    showView("sent");
+    buzz([18, 60, 18]);
+    focusSoon(sentTitle);
+  };
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (submitBtn.classList.contains("is-loading")) return;
+
+    triedSubmit = true;
+    formError.textContent = "";
+    const results = Object.values(fields).map((field) => validateField(field));
+    const firstInvalid = Object.values(fields).find((_, i) => !results[i]);
+    if (firstInvalid) {
+      firstInvalid.input.focus();
+      return;
+    }
+
+    const name = fields.name.input.value.trim();
+    const phone = fields.phone.input.value.trim();
+    const consentText = form.querySelector(".consent span").textContent.trim().replace(/\s+/g, " ");
+
+    setLoading(true);
+    try {
+      await sendLead({
+        name,
+        phone,
+        situation: state.situation,
+        plan: state.plan,
+        consent: true,
+        consentText,
+        source: "juristens-klocka",
+        sentAt: new Date().toISOString(),
+      });
+      showSent(name, phone);
+    } catch (error) {
+      formError.textContent = "Något gick fel när vi skulle skicka. Försök igen om en stund.";
+    } finally {
+      setLoading(false);
+    }
+  });
 
   /* ------------------------------------------------------------------------
      Start: tona in panelen när bilden laddats

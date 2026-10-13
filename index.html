@@ -39,61 +39,163 @@
           <h1 id="meter-title" class="eyebrow">Juristförsäkring</h1>
 
           <!--
-            Tre lägen på samma yta (ingen höjdändring):
+            Vy 1: klockan. Tre lägen på samma yta (ingen höjdändring):
             1. Välj situation  →  2. Klockan tickar  →  3. 0 kr i timkostnad + CTA
           -->
+          <div class="view" id="view-meter">
+            <!-- Rad 1: klockikon + kort status -->
+            <div class="meter__status">
+              <span class="clock" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle class="clock__face" cx="12" cy="12" r="9" />
+                  <path class="clock__hand" d="M12 12V6.5" />
+                  <path class="clock__check" d="m7.5 12.5 3 3 6-6.5" />
+                </svg>
+              </span>
+              <span class="swap">
+                <span class="swap__item meter__label meter__label--choose">Vad händer i ditt liv?</span>
+                <span class="swap__item meter__label meter__label--run" id="run-label" aria-hidden="true">Juristens klocka tickar …<span class="meter__sublabel">Utan HELP kostar det</span></span>
+                <span class="swap__item meter__label meter__label--done" aria-hidden="true">Med HELP</span>
+              </span>
 
-          <!-- Rad 1: klockikon + kort status -->
-          <div class="meter__status">
-            <span class="clock" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <circle class="clock__face" cx="12" cy="12" r="9" />
-                <path class="clock__hand" d="M12 12V6.5" />
-                <path class="clock__check" d="m7.5 12.5 3 3 6-6.5" />
-              </svg>
-            </span>
-            <span class="swap">
-              <span class="swap__item meter__label meter__label--choose">Vad händer i ditt liv?</span>
-              <span class="swap__item meter__label meter__label--run" id="run-label" aria-hidden="true">Juristens klocka tickar …<span class="meter__sublabel">Utan HELP kostar det</span></span>
-              <span class="swap__item meter__label meter__label--done" aria-hidden="true">Med HELP</span>
-            </span>
+              <!-- Visas när man landat på 0 kr: prova en annan situation -->
+              <button class="restart" type="button" id="restart" tabindex="-1" aria-hidden="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+                <span>Prova en annan</span>
+              </button>
+            </div>
 
-            <!-- Visas när man landat på 0 kr: prova en annan situation -->
-            <button class="restart" type="button" id="restart" tabindex="-1" aria-hidden="true">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                <path d="M3 3v5h5" />
-              </svg>
-              <span>Prova en annan</span>
+            <!-- Rad 2: siffran -->
+            <p class="meter__amount" aria-live="off">
+              <span class="meter__value" id="meter-value">?</span>
+              <span class="meter__unit">kr</span>
+            </p>
+
+            <!-- Rad 3: diskret fotnot (fylls i av index.js) -->
+            <p class="meter__note" id="meter-note">&nbsp;</p>
+
+            <!-- Rad 4: val → stoppknapp → CTA (samma plats) -->
+            <div class="swap meter__actions">
+              <div class="swap__item choices" role="group" aria-label="Välj situation">
+                <button class="choice" type="button" data-situation="separation">Separation</button>
+                <button class="choice" type="button" data-situation="huskop">Husköp</button>
+                <button class="choice" type="button" data-situation="arv">Arv</button>
+              </div>
+
+              <button class="swap__item stop" type="button" id="stop" tabindex="-1" aria-hidden="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
+                <span>Stoppa klockan</span>
+              </button>
+
+              <a class="swap__item cta" href="https://help.se/" id="cta" tabindex="-1" aria-hidden="true">
+                <span>Skaffa HELP</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Vy 2: välj betalplan – "Skaffa HELP" leder hit (planerna renderas av index.js) -->
+          <div class="view plans" id="view-plans" hidden>
+            <div class="lead__head">
+              <button class="back" type="button" id="plans-back">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+                <span>Tillbaka</span>
+              </button>
+              <h2 class="lead__title" id="plans-title" tabindex="-1">Välj din plan</h2>
+              <p class="lead__intro">Fast pris per månad – ingen timkostnad hos juristen.</p>
+            </div>
+
+            <fieldset class="plans__list" id="plans-list">
+              <legend class="visually-hidden">Betalplan</legend>
+            </fieldset>
+
+            <button class="cta plans__next" type="button" id="plans-next">
+              <span>Fortsätt</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           </div>
 
-          <!-- Rad 2: siffran -->
-          <p class="meter__amount" aria-live="off">
-            <span class="meter__value" id="meter-value">?</span>
-            <span class="meter__unit">kr</span>
-          </p>
-
-          <!-- Rad 3: diskret fotnot (fylls i av index.js) -->
-          <p class="meter__note" id="meter-note">&nbsp;</p>
-
-          <!-- Rad 4: val → stoppknapp → CTA (samma plats) -->
-          <div class="swap meter__actions">
-            <div class="swap__item choices" role="group" aria-label="Välj situation">
-              <button class="choice" type="button" data-situation="separation">Separation</button>
-              <button class="choice" type="button" data-situation="huskop">Husköp</button>
-              <button class="choice" type="button" data-situation="arv">Arv</button>
+          <!-- Vy 3: formulär -->
+          <form class="view lead" id="lead" hidden novalidate aria-labelledby="lead-title">
+            <div class="lead__head">
+              <button class="back" type="button" id="lead-back">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+                <span>Tillbaka</span>
+              </button>
+              <h2 class="lead__title" id="lead-title" tabindex="-1">Bli kontaktad av HELP</h2>
+              <p class="lead__intro">Lämna namn och nummer så ringer en rådgivare upp och berättar mer.</p>
+              <p class="lead__plan">Vald plan: <b id="lead-plan"></b></p>
             </div>
 
-            <button class="swap__item stop" type="button" id="stop" tabindex="-1" aria-hidden="true">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
-              <span>Stoppa klockan</span>
+            <div class="field">
+              <label class="field__label" for="lead-name">Namn</label>
+              <input
+                class="field__input"
+                id="lead-name"
+                name="name"
+                type="text"
+                autocomplete="name"
+                enterkeyhint="next"
+                required
+                aria-describedby="lead-name-error"
+              />
+              <p class="field__error" id="lead-name-error"></p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="lead-phone">Telefon</label>
+              <input
+                class="field__input"
+                id="lead-phone"
+                name="phone"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel"
+                enterkeyhint="send"
+                placeholder="070-123 45 67"
+                required
+                aria-describedby="lead-phone-error"
+              />
+              <p class="field__error" id="lead-phone-error"></p>
+            </div>
+
+            <div class="field">
+              <label class="consent">
+                <input class="consent__box" id="lead-consent" name="consent" type="checkbox" required aria-describedby="lead-consent-error" />
+                <span>
+                  Jag vill bli kontaktad av HELP.
+                  <!-- TODO: länka till HELP:s integritetspolicy -->
+                  <a href="https://help.se/" target="_blank" rel="noopener">Så hanterar vi dina uppgifter</a>
+                </span>
+              </label>
+              <p class="field__error" id="lead-consent-error"></p>
+            </div>
+
+            <button class="cta lead__submit" type="submit">
+              <span class="lead__submit-text">Ring upp mig</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
 
-            <a class="swap__item cta" href="https://help.se/" id="cta" tabindex="-1" aria-hidden="true">
-              <span>Skaffa HELP</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-            </a>
+            <p class="lead__error" id="lead-error" role="alert"></p>
+
+            <p class="lead__alt"><a href="https://help.se/">Vill du hellre teckna direkt?</a></p>
+          </form>
+
+          <!-- Vy 4: bekräftelse -->
+          <div class="view sent" id="view-sent" hidden>
+            <span class="sent__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m6.5 12.5 3.5 3.5 7.5-8" /></svg>
+            </span>
+            <h2 class="sent__title" id="sent-title" tabindex="-1">Tack<span id="sent-name"></span>!</h2>
+            <p class="sent__text">
+              Nu kan juristens klocka få vila. En rådgivare från HELP ringer dig på
+              <b id="sent-phone"></b> <span id="sent-when"></span> för att komma igång med
+              <b id="sent-plan"></b>.
+            </p>
+            <p class="sent__more"><a href="https://help.se/">Läs mer om HELP</a></p>
           </div>
 
           <!-- Rad 5: förtroende -->

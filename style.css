@@ -12,6 +12,8 @@
 
   --text: #4a5f62;
   --muted: #7f9194;
+  --line: #d3dddf;
+  --error: #b3261e;
   --white: #ffffff;
 
   --font: "Inter", system-ui, -apple-system, sans-serif;
@@ -161,10 +163,11 @@ svg {
 
 .hero {
   position: relative;
-  display: grid;
-  align-items: end;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   height: 100dvh;
+  overflow-y: auto; /* om formuläret + mobiltangentbordet inte får plats */
   padding: calc(var(--header-h) + 12px) var(--gutter) max(16px, env(safe-area-inset-bottom));
   background-color: #4f6f5c; /* samma ton som toningen där bilden tar slut */
   background-image: url("images/hero-bg.jpg");
@@ -194,12 +197,36 @@ svg {
 .meter {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: var(--gap);
   width: min(100%, 400px);
+  margin-top: auto; /* mobil: i nederkant – men skrollbar om den inte får plats */
   padding: clamp(24px, 4dvh, 36px);
   background: var(--white);
   border-radius: 24px;
   box-shadow: 0 30px 60px -28px rgba(0, 55, 62, 0.45);
+}
+
+/* Panelens vyer: klockan → formulär → bekräftelse (en i taget) */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.view[hidden] {
+  display: none;
+}
+
+.view.is-entering {
+  animation: view-in 0.45s var(--ease) both;
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }
 
 /* Flera saker på samma plats – en i taget syns (ingen höjdändring) */
@@ -637,6 +664,425 @@ svg {
 }
 
 /* --------------------------------------------------------------------------
+   Betalplaner – vita rutor som lyser grönt vid hovring/val
+   -------------------------------------------------------------------------- */
+
+.plans {
+  gap: 14px;
+}
+
+.plans__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  border: 0;
+}
+
+.plan {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  row-gap: 2px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--white);
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.25s ease,
+    transform 0.25s var(--spring);
+}
+
+/* Den rekommenderade får plats för sin etikett */
+.plan--recommended {
+  margin-top: 10px;
+  padding-top: 18px;
+}
+
+.plan:hover {
+  border-color: var(--lime);
+  box-shadow: 0 0 0 4px var(--lime-soft);
+}
+
+.plan:active {
+  transform: scale(0.985);
+}
+
+/* Vald plan */
+.plan:has(.plan__radio:checked) {
+  border-color: var(--lime);
+  background: #f5faec;
+  box-shadow: 0 0 0 4px var(--lime-soft), 0 12px 24px -16px rgba(0, 55, 62, 0.45);
+}
+
+.plan:has(.plan__radio:focus-visible) {
+  outline: 3px solid var(--petrol);
+  outline-offset: 3px;
+}
+
+/* Egen radioknapp */
+.plan__radio {
+  grid-row: 1 / span 2;
+  width: 22px;
+  height: 22px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s var(--spring);
+}
+
+.plan__radio:focus-visible {
+  outline: none; /* fokusramen ritas runt hela rutan */
+}
+
+.plan:hover .plan__radio {
+  border-color: var(--lime);
+}
+
+.plan__radio:checked {
+  border-color: var(--petrol);
+  box-shadow: inset 0 0 0 4px var(--white), inset 0 0 0 11px var(--petrol);
+}
+
+.plan__badge {
+  position: absolute;
+  top: 0;
+  left: 14px;
+  translate: 0 -55%;
+  padding: 4px 10px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--white);
+  background: var(--petrol);
+  border-radius: 999px;
+}
+
+.plan__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.plan__name {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--petrol);
+}
+
+.plan__price {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.plan__price b {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--petrol);
+}
+
+.plan__desc {
+  grid-column: 2;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.plans__next {
+  margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Formulär – "Bli kontaktad av HELP"
+   -------------------------------------------------------------------------- */
+
+.lead {
+  gap: 14px;
+}
+
+.lead__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* "Tillbaka" – samma diskreta stil som "Prova en annan" */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: -4px 0 4px -8px;
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-radius: 999px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.back svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.3s var(--ease);
+}
+
+.back:hover {
+  color: var(--petrol);
+  background: rgba(0, 55, 62, 0.06);
+}
+
+.back:hover svg {
+  transform: translateX(-3px);
+}
+
+.lead__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--petrol);
+}
+
+.lead__title:focus,
+.sent__title:focus {
+  outline: none; /* fokuseras bara programmatiskt, för skärmläsare */
+}
+
+.lead__intro {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+/* "Vald plan: Trygg · 79 kr/mån" */
+.lead__plan {
+  margin-top: 4px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  color: var(--text);
+  background: #f5faec;
+  border: 1px solid var(--lime-soft);
+  border-radius: 999px;
+}
+
+.lead__plan b {
+  font-weight: 700;
+  color: var(--petrol);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--petrol);
+}
+
+.field__input {
+  width: 100%;
+  padding: 13px 16px;
+  font: inherit;
+  font-size: 1rem; /* minst 16px – annars zoomar iOS in vid fokus */
+  font-weight: 500;
+  color: var(--petrol);
+  background: var(--white);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field__input::placeholder {
+  color: #a9b6b8;
+}
+
+.field__input:hover {
+  border-color: #b4c3c5;
+}
+
+.field__input:focus-visible,
+.field__input:focus {
+  border-color: var(--petrol);
+  box-shadow: 0 0 0 4px var(--lime-soft);
+}
+
+.field__input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+.field__error {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--error);
+}
+
+.field__error:empty,
+.lead__error:empty {
+  display: none;
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.consent__box {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 0;
+  accent-color: var(--petrol);
+  cursor: pointer;
+}
+
+.consent__box[aria-invalid="true"] {
+  outline: 2px solid var(--error);
+  outline-offset: 2px;
+}
+
+.consent a,
+.lead__alt a,
+.sent__more a {
+  font-weight: 600;
+  color: var(--petrol);
+  text-decoration: underline;
+  text-decoration-color: var(--lime);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.lead__submit {
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+/* Skickar … */
+.lead__submit.is-loading {
+  cursor: progress;
+}
+
+.lead__submit.is-loading svg {
+  animation: nudge-right 0.8s ease-in-out infinite;
+}
+
+@keyframes nudge-right {
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+.lead__error {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--error);
+}
+
+.lead__alt {
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Bekräftelse
+   -------------------------------------------------------------------------- */
+
+.sent {
+  align-items: flex-start;
+  gap: 12px;
+  padding-block: 4px 8px;
+}
+
+/* Stor lime bock – samma formspråk som klockan i "Med HELP"-läget */
+.sent__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 0 8px var(--lime-soft);
+}
+
+.sent__icon svg {
+  width: 36px;
+  height: 36px;
+  fill: none;
+  stroke: var(--petrol);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+}
+
+.sent.is-entering .sent__icon {
+  animation: pop 0.55s var(--spring) both;
+}
+
+.sent:not([hidden]) .sent__icon svg {
+  animation: draw 0.45s var(--ease) 0.25s forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.sent__title {
+  font-size: clamp(1.75rem, 8vw, 2.125rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--petrol);
+}
+
+.sent__text {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.sent__text b {
+  font-weight: 700;
+  color: var(--petrol);
+  white-space: nowrap;
+}
+
+.sent__more {
+  font-size: 0.875rem;
+}
+
+/* --------------------------------------------------------------------------
    Intro
    -------------------------------------------------------------------------- */
 
@@ -683,8 +1129,7 @@ svg {
 /* Desktop: fotot får ta plats, panelen ligger över lövverket till höger */
 @media (min-width: 861px) {
   .hero {
-    align-items: center;
-    justify-items: end;
+    align-items: flex-end;
     padding: calc(var(--header-h) + 16px) max(var(--gutter), calc((100vw - 1200px) / 2 + var(--gutter))) 24px;
     background-color: #c9cfa8; /* matchar bildens ton medan den laddas */
     background-size: cover;
@@ -696,6 +1141,10 @@ svg {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) calc(var(--header-h) * 1.8)),
       linear-gradient(90deg, rgba(0, 55, 62, 0) 45%, rgba(0, 55, 62, 0.18) 100%);
+  }
+
+  .meter {
+    margin-block: auto; /* vertikalt centrerad */
   }
 
   .meter__amount {
